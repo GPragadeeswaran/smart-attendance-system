@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>Smart Attendance System</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="icon" href="static/img/college.ico" type="img/x-icon">
+</head>
+
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+
+    <div class="logo">🏫 Smart Attendance</div>
+
+    <ul class="nav-links">
+        <li><a class="active" href="/">Home</a></li>
+        <li><a href="/studentslist">Students List</a></li>
+        <li><a href="/add_students">Add Students</a></li>
+        <li><a href="/attendance">Attendance Entry</a></li>
+        <li>🔍︎</li>
+    </ul>
+
+</nav>
+
+
+<!-- PAGE HEADER -->
+<section class="page-header">
+
+    <h1>Student Attendance Records</h1>
+
+    <p>View and manage daily attendance</p>
+
+</section>
+
+
+<!-- FILTER SECTION -->
+<section class="filter-box">
+
+    <input type="text" placeholder="Student ID">
+
+    <input type="date">
+
+    <button class="btn blue">Search</button>
+
+</section>
+
+
+<!-- ATTENDANCE TABLE -->
+<section class="table-container">
+
+    <table>
+
+        <thead>
+
+            <tr>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Status</th>
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% if attendance and attendance|length > 0 %}
+
+                {% for row in attendance %}
+
+                <tr>
+
+                    <td>{{ row[0] }}</td>
+
+                    <td>{{ row[1] }}</td>
+
+                    <td>{{ row[2] }}</td>
+
+                    <td>{{ row[3] or "—" }}</td>
+
+                    <td>{{ row[4] or "—" }}</td>
+
+
+                    {% if row[3] %}
+                        <td class="present">Present</td>
+                    {% else %}
+                        <td class="absent">Absent</td>
+                    {% endif %}
+
+                </tr>
+
+                {% endfor %}
+
+            {% else %}
+
+                <!-- SAFE FALLBACK (NO DATA) -->
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:15px;">
+                        No attendance records found
+                    </td>
+                </tr>
+
+            {% endif %}
+
+        </tbody>
+
+    </table>
+
+</section>
+
+
+<!-- NO DATA MESSAGE (JS FILTER) -->
+<p id="no-data"
+   style="display:none; text-align:center; margin-top:10px;">
+
+    No attendance records found
+
+</p>
+
+
+
+<!-- SCRIPT -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchBtn = document.querySelector(".btn.blue");
+
+    const studentIdInput =
+        document.querySelector(".filter-box input[type='text']");
+
+    const dateInput =
+        document.querySelector(".filter-box input[type='date']");
+
+    const tableRows =
+        document.querySelectorAll("tbody tr");
+
+    const noDataMsg =
+        document.getElementById("no-data");
+
+
+
+    searchBtn.addEventListener("click", function () {
+
+        const studentIdValue =
+            studentIdInput.value.trim();
+
+        const dateValue =
+            dateInput.value;
+
+        let anyVisible = false;
+
+
+        tableRows.forEach(row => {
+
+            // Ignore "No data" row
+            if (row.children.length < 6) return;
+
+
+            const rowStudentId =
+                row.children[0].textContent.trim();
+
+            const rowDate =
+                row.children[2].textContent;
+
+
+            let matchStudent = true;
+            let matchDate = true;
+
+
+            if (studentIdValue !== "") {
+
+                matchStudent =
+                    rowStudentId.includes(studentIdValue);
+
+            }
+
+
+            if (dateValue !== "") {
+
+                matchDate =
+                    rowDate === dateValue;
+
+            }
+
+
+            if (matchStudent && matchDate) {
+
+                row.style.display = "";
+                anyVisible = true;
+
+            } else {
+
+                row.style.display = "none";
+
+            }
+
+        });
+
+
+        // Show / hide "No data" message
+        noDataMsg.style.display =
+            anyVisible ? "none" : "block";
+
+    });
+
+});
+</script>
+
+
+</body>
+</html>

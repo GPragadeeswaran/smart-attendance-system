@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Attendance System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/attendance.css') }}">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="logo">
+        <span>🏫</span> College Name
+    </div>
+    <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/studentslist">Students List</a></li>
+        <li><a href="/add_students">Add Students</a></li>
+        <li><a class="active" href="/attendance">Attendance Entry</a></li>
+        <li>🔍︎</li>
+    </ul>
+</nav>
+
+<!-- Main Container -->
+<div class="container">
+    <h1>Attendance Entry</h1>
+
+    <form class="attendance-form" id="attendanceForm">
+
+        <!-- Student ID -->
+        
+        <div class="form-group">
+            <label>Student ID</label>
+            <input type="text"
+                placeholder="Enter valid student ID"
+                name="student_id"
+                required
+                inputmode="numeric"
+                autocomplete="off"
+                title="Format must be like STU001">
+
+
+        </div>
+
+        <!-- Date -->
+
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date"
+                required
+                min="2000-01-01"
+                max="2099-12-31"
+                name="attendance_date">
+
+        </div>
+
+        <!-- Time -->
+
+        <div class="time-group">
+            <div class="form-group">
+                <label>Check-in Time</label>
+                <input type="time" id="checkin" name="check_in">
+            </div>
+
+            <div class="form-group">
+                <label>Check-out Time</label>
+                <input type="time" id="checkout" name="check_out">
+            </div>
+        </div>
+
+        <!-- Buttons -->
+
+        <div class="buttons">
+            <button type="submit" class="btn save">Save Attendance</button>
+            <button type="reset" class="btn reset">Reset</button>
+        </div>
+
+    </form>
+</div>
+
+
+<script>
+
+    document.getElementById("attendanceForm").addEventListener("submit", function (e) {
+        e.preventDefault(); // stop page reload
+
+        const form = e.target;
+        const formData = new FormData(form);
+
+        fetch("/attendance", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.text().then(text => ({ status: res.status, text })))
+        .then(result => {
+            if (result.status === 200) {
+                showPopup("Success", "Attendance saved successfully ✅");
+                form.reset();
+            } else {
+                showPopup("Error", result.text);
+            }
+        })
+        .catch(() => {
+            showPopup("Error", "Server error occurred");
+        });
+    });
+
+    function showPopup(title, message) {
+        document.getElementById("popup-title").innerText = title;
+        document.getElementById("popup-message").innerText = message;
+        document.getElementById("popup").style.display = "flex";
+    }
+
+    function closePopup() {
+        document.getElementById("popup").style.display = "none";
+    }
+/*  function formatStudentID(input) {
+    let value = input.value.toUpperCase(); // Convert all to uppercase
+    let cursorPos = input.selectionStart;
+
+    // Split value into array of characters
+    let chars = value.split("");
+
+    for (let i = 0; i < chars.length; i++) {
+        if (i < 3) {
+            // First 3 characters must be letters
+            if (!/[A-Z]/.test(chars[i])) {
+                chars[i] = ""; // remove invalid letter
+                if (i < cursorPos) cursorPos--; // adjust cursor
+            }
+        } else {
+            // After first 3, only digits allowed
+            if (!/\d/.test(chars[i])) {
+                chars[i] = ""; // remove invalid digit
+                if (i < cursorPos) cursorPos--; // adjust cursor
+            }
+        }
+    } 
+
+    let newValue = chars.join("").replace(/\s/g, ""); // also remove spaces
+    input.value = newValue;
+
+    // Restore cursor position
+    input.setSelectionRange(cursorPos, cursorPos);
+} */
+
+
+/* Block invalid keys for Student ID */
+/* function blockInvalidKeys(e) {
+    const input = e.target;
+    const pos = input.selectionStart;
+
+    // Allow control keys (backspace, delete, arrows, tab)
+    const allowedKeys = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
+    if (allowedKeys.includes(e.key)) return;
+
+    // First 3 characters: only letters
+    if (pos < 3) {
+        if (!/[A-Z]/i.test(e.key)) {
+            e.preventDefault(); // block invalid key
+        }
+    } else {
+        // After 3rd char: only digits
+        if (!/\d/.test(e.key)) {
+            e.preventDefault(); // block invalid key
+        }
+    }
+}   */
+
+function onlyNumbers(input) {
+    // Remove everything except digits
+    input.value = input.value.replace(/\D/g, "");
+}
+
+function blockNonNumbers(e) {
+    // Allow control keys
+    const allowedKeys = [
+        "Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"
+    ];
+    if (allowedKeys.includes(e.key)) return;
+
+    // Block if not a digit
+    if (!/\d/.test(e.key)) {
+        e.preventDefault();
+    }
+}
+
+
+
+
+</script>
+
+<div id="popup" class="popup-overlay">
+    <div class="popup-box">
+        <h3 id="popup-title"></h3>
+        <p id="popup-message"></p>
+        <button onclick="closePopup()">OK</button>
+    </div>
+</div>
+
+
+
+
+
+</body>
+</html>

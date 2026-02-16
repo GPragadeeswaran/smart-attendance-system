@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Students List</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/view_students.css') }}">
+</head>
+
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="logo">🏫 College Name</div>
+
+    <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a class="active" href="/studentslist">Students List</a></li>
+        <li><a href="/add_students">Add Students</a></li>
+        <li><a href="/attendance">Attendance Entry</a></li>
+        <li>🔍︎</li>
+    </ul>
+</nav>
+
+
+<!-- Page Content -->
+<div class="page">
+
+    <h2>Students List</h2>
+
+
+    <!-- Search & Filters -->
+    <div class="filters">
+
+        <input type="text" placeholder="Search by name, ID, or email">
+
+        <select>
+            <option>All Courses</option>
+            <option>B.E</option>
+            <option>B.Tech</option>
+            <option>MCA</option>
+            <option>MBA</option>
+        </select>
+
+        <select>
+            <option>Any Status</option>
+            <option>Active</option>
+            <option>Inactive</option>
+        </select>
+
+        <button class="btn search">Search</button>
+
+    </div>
+
+
+    <!-- Action Buttons -->
+    <div class="actions">
+
+        <button class="btn green" id="enableBtn">
+            Enable Selected
+        </button>
+
+        <button class="btn red disable-btn" id="disableBtn">
+            Disable Selected
+        </button>
+
+        <button class="btn delete" id="bulkDeleteBtn">
+            🗑 Delete Selected
+        </button>
+
+        <span id="selectedCount">0 selected</span>
+
+    </div>
+
+
+    <!-- Table -->
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAll"></th>
+                    <th>Student Name</th>
+                    <th>Student ID</th>
+                    <th>Course</th>
+                    <th>Email</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+
+            <tbody id="tableBody">
+
+                {% for student in students %}
+                <tr data-student-id="{{ student[1] }}">
+
+                    <td>
+                        <input type="checkbox" class="row-checkbox">
+                    </td>
+
+                    <td>{{ student[0] }}</td>
+                    <td>{{ student[1] }}</td>
+                    <td>{{ student[2] }}</td>
+                    <td>{{ student[3] }}</td>
+
+                    <td>
+                        <label class="switch">
+                            <input type="checkbox" class="status-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </td>
+
+                    <td>
+                        <button class="edit">✏ Edit</button>
+                    </td>
+
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+
+        <div class="modal-content">
+
+            <h3>Edit Student</h3>
+
+            <label>Name</label>
+            <input type="text" id="editName">
+
+            <label>Student ID</label>
+            <input type="text" id="editId">
+
+            <label>Course</label>
+            <input type="text" id="editCourse">
+
+            <label>Email</label>
+            <input type="email" id="editEmail">
+
+
+            <div class="modal-actions">
+
+                <button id="saveEdit" class="btn green">
+                    Save
+                </button>
+
+                <button id="cancelEdit" class="btn red">
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- SCRIPT -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    let currentRow = null;
+
+
+    const tableBody = document.getElementById("tableBody");
+
+    const selectAll = document.getElementById("selectAll");
+    const selectedCount = document.getElementById("selectedCount");
+
+    const enableBtn = document.getElementById("enableBtn");
+    const disableBtn = document.getElementById("disableBtn");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+
+
+    const searchInput = document.querySelector(".filters input");
+    const searchBtn = document.querySelector(".btn.search");
+
+    const courseFilter = document.querySelectorAll(".filters select")[0];
+    const statusFilter = document.querySelectorAll(".filters select")[1];
+
+
+    const modal = document.getElementById("editModal");
+
+    const editName = document.getElementById("editName");
+    const editId = document.getElementById("editId");
+    const editCourse = document.getElementById("editCourse");
+    const editEmail = document.getElementById("editEmail");
+
+    const saveEdit = document.getElementById("saveEdit");
+    const cancelEdit = document.getElementById("cancelEdit");
+
+
+
+    /* ===============================
+       OPEN EDIT MODAL
+    ================================ */
+
+    tableBody.addEventListener("click", function (e) {
+
+        if (!e.target.classList.contains("edit")) return;
+
+        currentRow = e.target.closest("tr");
+
+        editName.value = currentRow.children[1].textContent;
+        editId.value = currentRow.children[2].textContent;
+        editCourse.value = currentRow.children[3].textContent;
+        editEmail.value = currentRow.children[4].textContent;
+
+        modal.style.display = "flex";
+
+    });
+
+
+
+    /* ===============================
+       SAVE EDIT
+    ================================ */
+
+    saveEdit.addEventListener("click", function () {
+
+        if (!currentRow) return;
+
+        currentRow.children[1].textContent = editName.value.trim();
+        currentRow.children[2].textContent = editId.value.trim();
+        currentRow.children[3].textContent = editCourse.value.trim();
+        currentRow.children[4].textContent = editEmail.value.trim();
+
+        modal.style.display = "none";
+        currentRow = null;
+
+    });
+
+
+
+    /* ===============================
+       CANCEL EDIT
+    ================================ */
+
+    cancelEdit.addEventListener("click", function () {
+
+        modal.style.display = "none";
+        currentRow = null;
+
+    });
+
+
+
+    /* ===============================
+       UPDATE SELECTED COUNT
+    ================================ */
+
+    function updateSelectedCount() {
+
+        let count = 0;
+
+        tableBody.querySelectorAll(".row-checkbox").forEach(cb => {
+
+            if (cb.checked) count++;
+
+        });
+
+        selectedCount.textContent = count + " selected";
+
+    }
+
+
+
+    /* ===============================
+       SELECT ALL
+    ================================ */
+
+    selectAll.addEventListener("change", function () {
+
+        tableBody.querySelectorAll(".row-checkbox").forEach(cb => {
+
+            cb.checked = selectAll.checked;
+
+        });
+
+        updateSelectedCount();
+
+    });
+
+
+
+    tableBody.addEventListener("change", function (e) {
+
+        if (!e.target.classList.contains("row-checkbox")) return;
+
+        updateSelectedCount();
+
+        const all = tableBody.querySelectorAll(".row-checkbox");
+
+        const checked = [...all].filter(cb => cb.checked);
+
+        selectAll.checked = checked.length === all.length;
+
+    });
+
+
+
+    /* ===============================
+       ENABLE / DISABLE  (FIXED)
+    ================================ */
+
+    enableBtn.addEventListener("click", function () {
+
+        let changed = false;
+
+        tableBody.querySelectorAll("tr").forEach(row => {
+
+            const rowCheckbox = row.querySelector(".row-checkbox");
+            const statusToggle = row.querySelector(".status-toggle");
+
+            if (rowCheckbox.checked && statusToggle) {
+
+                statusToggle.checked = true;
+                changed = true;
+
+            }
+
+        });
+
+        if (!changed) {
+            alert("Please select at least one student first.");
+        }
+
+    });
+
+
+
+    disableBtn.addEventListener("click", function () {
+
+        let changed = false;
+
+        tableBody.querySelectorAll("tr").forEach(row => {
+
+            const rowCheckbox = row.querySelector(".row-checkbox");
+            const statusToggle = row.querySelector(".status-toggle");
+
+            if (rowCheckbox.checked && statusToggle) {
+
+                statusToggle.checked = false;
+                changed = true;
+
+            }
+
+        });
+
+        if (!changed) {
+            alert("Please select at least one student first.");
+        }
+
+    });
+
+
+
+    /* ===============================
+       DELETE
+    ================================ */
+
+    bulkDeleteBtn.addEventListener("click", function () {
+
+        const selectedIds = [];
+
+
+        tableBody.querySelectorAll("tr").forEach(row => {
+
+            const checkbox = row.querySelector(".row-checkbox");
+
+            if (checkbox.checked) {
+
+                selectedIds.push(row.dataset.studentId);
+
+            }
+
+        });
+
+
+        if (selectedIds.length === 0) {
+
+            alert("Please select at least one student!");
+
+            return;
+
+        }
+
+
+        if (!confirm(`Delete ${selectedIds.length} student(s)?`)) return;
+
+
+        fetch("/delete-students", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                student_ids: selectedIds
+            })
+
+        })
+
+        .then(res => res.json())
+
+        .then(data => {
+
+            if (data.success) {
+
+                alert("Deleted successfully!");
+
+                location.reload();
+
+            } else {
+
+                alert("Delete failed!");
+
+            }
+
+        })
+
+        .catch(() => {
+
+            alert("Server error!");
+
+        });
+
+    });
+
+
+
+    /* ===============================
+       SEARCH & FILTER
+    ================================ */
+
+    function applyFilters() {
+
+        const text = searchInput.value.toLowerCase();
+
+        const courseValue = courseFilter.value;
+
+        const statusValue = statusFilter.value;
+
+
+        tableBody.querySelectorAll("tr").forEach(row => {
+
+            const name = row.children[1].textContent.toLowerCase();
+            const id = row.children[2].textContent.toLowerCase();
+            const course = row.children[3].textContent;
+            const email = row.children[4].textContent.toLowerCase();
+
+            const isActive = row.querySelector(".status-toggle").checked;
+
+
+            const searchMatch =
+                text === "" ||
+                name.includes(text) ||
+                id.includes(text) ||
+                email.includes(text);
+
+
+            const courseMatch =
+                courseValue === "All Courses" ||
+                course === courseValue;
+
+
+            const statusMatch =
+                statusValue === "Any Status" ||
+                (statusValue === "Active" && isActive) ||
+                (statusValue === "Inactive" && !isActive);
+
+
+            row.style.display =
+                searchMatch && courseMatch && statusMatch ? "" : "none";
+
+        });
+
+    }
+
+
+    searchBtn.addEventListener("click", applyFilters);
+
+
+});
+</script>
+
+</body>
+</html>
